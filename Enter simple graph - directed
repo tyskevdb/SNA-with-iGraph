@@ -1,0 +1,4 @@
+library(igraph)
+examplenetwork <- graph(edges=c("Tijs","Peter", "Tijs","Christine", "Peter","Christine", "Christine","Mariken"), directed=TRUE)
+examplenetwork
+plot(examplenetwork)
