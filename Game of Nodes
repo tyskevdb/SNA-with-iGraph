@@ -1,0 +1,135 @@
+library(igraph)
+
+# Credit SNA files: A. Beveridge and J. Shan, "Network of Thrones," Math Horizons Magazine , Vol. 23, No. 4 (2016), pp. 18-22.
+# Network data for character relationships within George R. R. Martin's A Storm of Swords, the third novel in his series A Song of Ice and Fire
+# Relationships between those characters, which were calculated based on how many times two characters' names appeared within 15 words of one another in the novel
+
+edges <- read.csv(file="gotedges.csv", header = T, as.is = T)
+# Examine the imported edges data
+head(edges)
+nrow(edges)
+
+#Check for double edges
+nrow(unique(edges[,c("Source", "Target")]))
+
+nodes <- read.csv(file="gotnodes.csv", header = T, as.is = T)
+# Examine the imported nodes data
+head(nodes)
+nrow(nodes)
+
+#Check for double nodes
+length(unique(nodes$Id))
+
+#Create network graph from imported edges and nodes, which is undirected
+gotnetwork <- graph_from_data_frame(d=edges, vertices=nodes, directed=F)
+gotnetwork
+
+# Let's plot this mess
+plot(gotnetwork)
+
+# What are the edges (E) and the (Nodes)
+E(gotnetwork)
+V(gotnetwork)
+
+# What types of gender are there among characters? 
+V(gotnetwork)$Gender
+
+#Overview of all weights among the edges
+E(gotnetwork)$Weight
+Weights <- E(gotnetwork)$Weight
+Weights
+summary(Weights)
+max(Weights)
+
+#Show only edges with a weight above 30. 
+E(gotnetwork)[Weight > 30]
+
+
+#Examine matrix
+gotnetwork[13,]
+gotnetwork["Arya","Sansa"]
+gotnetwork["Arya","Robert"]
+
+# Generate colors based on media type: 
+colrs <- c("pink", "blue") 
+V(gotnetwork)$color <- colrs[V(gotnetwork)$Gender]
+
+# Compute node degrees (#links) and use that to set node size: 
+deg <- degree(gotnetwork)
+bet <- betweenness(gotnetwork) 
+
+
+# Define Vertices(V) properties for graph
+V(gotnetwork)$size <- deg*0.2
+V(gotnetwork)$label.cex <- 0.2+deg/50
+V(gotnetwork)$label.color <- "black"
+V(gotnetwork)$label.dist <- 0
+# Frame as parent color or white?
+V(gotnetwork)$frame.color <- V(gotnetwork)$color
+#V(gotnetwork)$frame.color <- "white"
+
+# Define Edges(E) properties for graph
+E(gotnetwork)$arrow.size <- 0.1
+E(gotnetwork)$width <- 0.1+E(gotnetwork)$Weight/20
+E(gotnetwork)$curved <- 0.3
+
+#Plot the graph with a specific lay-out
+l <- layout_with_fr(gotnetwork) 
+#s <- layout_on_sphere(gotnetwork)
+#k <- layout_with_kk(gotnetwork)
+#Only for directed graph lgl <- layout_with_lgl(gotnetwork)
+plot(gotnetwork, rescale=F, layout=l*0.10)
+legend(x=-1.5, y=-1.1, c("Female","Male"), pch=21, col="#777777", pt.bg=colrs, pt.cex=2, cex=.8, bty="n", ncol=1)
+
+#Sparsify
+hist(edges$Weight)
+mean(edges$Weight)
+sd(edges$Weight)
+
+#Delete edges below a certain cut-off point
+cut.off <- mean(edges$Weight) 
+gotnetwork.sparsified <- delete_edges(gotnetwork, E(gotnetwork)[Weight<cut.off]) 
+plot(gotnetwork.sparsified, rescale=F, layout=l*0.12)
+legend(x=-1.5, y=-1.1, c("Female","Male"), pch=21, col="#777777", pt.bg=colrs, pt.cex=2, cex=.8, bty="n", ncol=1)
+
+
+#Delete nodes below a certain cut-off point
+cut.off2 <- mean(deg) 
+gotnetwork.sparsified2 <- delete_vertices(gotnetwork, deg<cut.off2) 
+plot(gotnetwork.sparsified2, rescale=F, layout=l*0.12)
+legend(x=-1.5, y=-1.1, c("Female","Male"), pch=21, col="#777777", pt.bg=colrs, pt.cex=2, cex=.8, bty="n", ncol=1)
+
+#Community detection and highlighting
+clp <- cluster_label_prop(gotnetwork) 
+class(clp)
+clp
+plot(clp, gotnetwork)
+
+V(gotnetwork)$community <- clp$membership
+colrs <- adjustcolor( c("red", "yellow", "blue", "green")) 
+V(gotnetwork)$color <- colrs[V(gotnetwork)$community]
+plot(gotnetwork)
+
+# How does density and centralization differ between clusters?
+edge_density(simplify(gotnetwork), loops = FALSE)
+centr_degree(simplify(gotnetwork), mode = c("all"), loops = FALSE, normalized = TRUE)
+
+subg1<-induced.subgraph(gotnetwork, which(V(gotnetwork)$community==1))
+V(subg1)
+edge_density(simplify(subg1), loops = FALSE)
+centr_degree(simplify(subg1), mode = c("all"), loops = FALSE, normalized = TRUE)
+
+subg2<-induced.subgraph(gotnetwork, which(V(gotnetwork)$community==2))
+V(subg2)
+edge_density(simplify(subg2), loops = FALSE)
+centr_degree(simplify(subg2), mode = c("all"), loops = FALSE, normalized = TRUE)
+
+subg3<-induced.subgraph(gotnetwork, which(V(gotnetwork)$community==3))
+V(subg3)
+edge_density(simplify(subg3), loops = FALSE)
+centr_degree(simplify(subg3), mode = c("all"), loops = FALSE, normalized = TRUE)
+
+subg4<-induced.subgraph(gotnetwork, which(V(gotnetwork)$community==4))
+V(subg4)
+edge_density(simplify(subg4), loops = FALSE)
+centr_degree(simplify(subg4), mode = c("all"), loops = FALSE, normalized = TRUE)
