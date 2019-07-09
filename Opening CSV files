@@ -1,0 +1,13 @@
+library(igraph)
+# Choosing a file to open with windows explorer to 
+exampledata <- read.csv(file.choose(),header=FALSE,sep=“;”)
+examplenetwork <- graph.data.frame(exampledata,directed=FALSE)
+examplenetwork
+plot(examplenetwork)
+
+# Alternatively you point at the file location (from your path)
+# library(igraph)
+# exampledata <- read.csv(file=“/R/examplenetwork.csv”,header=FALSE,sep=”;”)
+# examplenetwork <- graph.data.frame(exampledata,directed=FALSE)
+# examplenetwork
+# plot(examplenetwork)
