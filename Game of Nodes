@@ -27,7 +27,7 @@ gotnetwork
 # Let's plot this mess
 plot(gotnetwork)
 
-# What are the edges (E) and the (Nodes)
+# What are the edges (E) and the nodes (V)?
 E(gotnetwork)
 V(gotnetwork)
 
